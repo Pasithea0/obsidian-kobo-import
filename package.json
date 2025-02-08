@@ -30,7 +30,7 @@
     "nyc": "17.1.0",
     "obsidian": "1.4.11",
     "ts-node": "10.9.2",
-    "tslib": "2.6.2",
+    "tslib": "2.8.1",
     "typescript": "5.4.5",
     "release-please": "^16.15.0"
   },
