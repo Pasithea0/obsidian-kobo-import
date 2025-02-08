@@ -29,7 +29,7 @@ jobs:
           private-key: ${{ env.GITHUB_PRIVATE_KEY }}
           app-id: ${{ env.GITHUB_APP_ID }}
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.2.2
       - uses: google-github-actions/release-please-action@v4
         with:
           token: "${{ steps.get_token.outputs.token }}"
