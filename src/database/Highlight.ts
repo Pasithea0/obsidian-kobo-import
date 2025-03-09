@@ -222,4 +222,19 @@ export class HighlightService {
 
         return originalContent
     }
+
+    async getAllBooks(): Promise<Map<string, BookDetails>> {
+        const books = await this.repo.getAllBookDetails();
+        const bookMap = new Map<string, BookDetails>();
+        
+        for (const book of books) {
+            bookMap.set(book.title, book);
+        }
+        
+        return bookMap;
+    }
+
+    async getAllContentByBookTitle(bookTitle: string): Promise<Content[]> {
+        return this.repo.getAllContentByBookTitle(bookTitle);
+    }
 }
