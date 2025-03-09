@@ -9,12 +9,6 @@ import { KoboHighlightsImporterSettings } from "src/settings/Settings";
 import { applyTemplateTransformations } from 'src/template/template';
 import { getTemplateContents } from 'src/template/templateContents';
 
-type bookmark = {
-    bookmarkId: string
-    fullContent: string
-    highlightContent: string
-}
-
 export class ExtractHighlightsModal extends Modal {
     goButtonEl!: HTMLButtonElement;
     inputFileEl!: HTMLInputElement
@@ -42,89 +36,46 @@ export class ExtractHighlightsModal extends Modal {
         })
 
         const db = new SQLEngine.Database(new Uint8Array(this.fileBuffer))
-        const service = new HighlightService(new Repository(db))
+
+        const service: HighlightService = new HighlightService(
+            new Repository(
+                db
+            )
+        )
+
+        const content = service.convertToMap(
+            await service.getAllHighlight(this.settings.sortByChapterProgress),
+            this.settings.includeCreatedDate,
+            this.settings.dateFormat,
+            this.settings.includeCallouts,
+            this.settings.highlightCallout,
+            this.settings.annotationCallout
+        )
+
+        this.nrOfBooksExtracted = content.size
         const template = await getTemplateContents(this.app, this.settings.templatePath)
 
-        if (this.settings.importAllBooks) {
-            // Import all books, including those without highlights
-            const allBooks = await service.getAllBooks()
-            this.nrOfBooksExtracted = allBooks.size
+        for (const [bookTitle, chapters] of content) {
 
-            for (const [bookTitle, details] of allBooks) {
-                const sanitizedBookName = sanitize(bookTitle)
-                const fileName = normalizePath(`${this.settings.storageFolder}/${sanitizedBookName}.md`)
-                
-                // Check if file already exists
-                let existingFile;
-                try {
-                    existingFile = await this.app.vault.adapter.read(fileName)
-                } catch (error) {
-                    console.warn("Attempted to read file, but it does not already exist.")
-                }
-
-                // Get highlights if they exist
-                const chapters = new Map<string, bookmark[]>()
-                const content = await service.getAllContentByBookTitle(bookTitle)
-                if (content.length > 0) {
-                    const highlights = await service.getAllHighlight(this.settings.sortByChapterProgress)
-                    const bookHighlights = highlights.filter(h => h.content.bookTitle === bookTitle)
-                    if (bookHighlights.length > 0) {
-                        const highlightMap = service.convertToMap(
-                            bookHighlights,
-                            this.settings.includeCreatedDate,
-                            this.settings.dateFormat,
-                            this.settings.includeCallouts,
-                            this.settings.highlightCallout,
-                            this.settings.annotationCallout
-                        )
-                        const bookChapters = highlightMap.get(bookTitle)
-                        if (bookChapters) {
-                            for (const [chapter, marks] of bookChapters) {
-                                chapters.set(chapter, marks)
-                            }
-                        }
-                    }
-                }
-
-                const markdown = service.fromMapToMarkdown(chapters, existingFile)
-                await this.app.vault.adapter.write(
-                    fileName,
-                    applyTemplateTransformations(template, markdown, details)
-                )
+            const sanitizedBookName = sanitize(bookTitle)
+            const fileName = normalizePath(`${this.settings.storageFolder}/${sanitizedBookName}.md`)
+            // Check if file already exists
+            let existingFile;
+            try {
+                existingFile = await this.app.vault.adapter.read(fileName)
+            } catch (error) {
+                console.warn("Attempted to read file, but it does not already exist.")
             }
-        } else {
-            // Original behavior - only import books with highlights
-            const content = service.convertToMap(
-                await service.getAllHighlight(this.settings.sortByChapterProgress),
-                this.settings.includeCreatedDate,
-                this.settings.dateFormat,
-                this.settings.includeCallouts,
-                this.settings.highlightCallout,
-                this.settings.annotationCallout
+
+            const markdown = service.fromMapToMarkdown(chapters, existingFile)
+            const details = await service.getBookDetailsFromBookTitle(bookTitle)
+         
+            // Write file
+
+            await this.app.vault.adapter.write(
+                fileName,
+                applyTemplateTransformations(template, markdown, details)
             )
-
-            this.nrOfBooksExtracted = content.size
-
-            for (const [bookTitle, chapters] of content) {
-                const sanitizedBookName = sanitize(bookTitle)
-                const fileName = normalizePath(`${this.settings.storageFolder}/${sanitizedBookName}.md`)
-                
-                // Check if file already exists
-                let existingFile;
-                try {
-                    existingFile = await this.app.vault.adapter.read(fileName)
-                } catch (error) {
-                    console.warn("Attempted to read file, but it does not already exist.")
-                }
-
-                const markdown = service.fromMapToMarkdown(chapters, existingFile)
-                const details = await service.getBookDetailsFromBookTitle(bookTitle)
-                
-                await this.app.vault.adapter.write(
-                    fileName,
-                    applyTemplateTransformations(template, markdown, details)
-                )
-            }
         }
     }
 
