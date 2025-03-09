@@ -1,3 +1,24 @@
+
+--------------------------------
+
+## This fork adds the ability to import **all** books from your Kobo device, not just those with highlights. 
+This means you can:
+
+- Import your entire Kobo library into Obsidian
+- Track reading progress and status for all books
+- View metadata like reading time, completion percentage, and series information
+- Still get all highlights and annotations for books that have them
+
+You can enable this feature in the plugin settings by toggling "Import all books".
+
+--------------------------------
+
+How to install this fork?
+- Download the Latest Release and install it within Obsidian's plugin folder.
+- Use BRAT (Beta Review and Testing) plugin to install it within Obsidian.
+
+--------------------------------
+
 # Obsidian Kobo Highlight Importer
 
 This plugin aims to make highlight import from Kobo devices easier.
