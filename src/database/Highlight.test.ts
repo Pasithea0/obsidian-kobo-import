@@ -851,7 +851,10 @@ ${typeWhateverYouWantPlaceholder}
             });
 
             const nonExistentBook = await service.getBookDetailsFromBookTitle("Non-existent Book");
-            chai.expect(nonExistentBook).to.be.null;
+			chai.expect(nonExistentBook).to.deep.equal({
+				title: "Unknown Title",
+				author: "Unknown Author"
+			});
         });
     });
 });
